@@ -1,0 +1,230 @@
+from kivy.app import App
+from kivy.uix.widget import Widget
+from kivy.uix.button import Button
+from kivy.uix.textinput import TextInput
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.anchorlayout import AnchorLayout
+from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.config import Config
+import requests
+
+def lang(langa):
+    langs=["RU", "KZ", "ENG"]
+    langb=langs.index(langa)
+    if langb==2:
+        langb=0
+    else:
+        langb=langb+1
+    return langs[langb]
+
+def inflang(inflanga):
+    inflangb=[]
+    recomru=["-шорты \n-футболка \n-открытая_обувь\n",
+        "-штаны \n-футболка \n-осенняя_куртка \n-закрытая_обувь\n",
+         "-штаны \n-футболка \n-осенняя_куртка \n-кофта \n-шапка \n-осенняя_обувь \n-теплые_носки\n",
+         "-штаны \n-футболка \n-зимняя_куртка \n-шапка \n-зимняя_обувь\n",
+         "-теплые_штаны \n-футболка \n-зимняя_куртка \n-кофта \n-термобелье \n-шапка \n-зимняя_обувь \n-очень_теплые_носки \n-теплый_шарф\n",
+         "-летняя_кофта\n",
+         "-зонт/дождевик \n-непромокаемая_обувь\n",
+         "-кепка/зонт/панама \n-сонцезащитные_очки\n",
+         "-шарф\n",
+         "-сонцезащитные_очки\n",
+         "-теплый_шарф\n",
+         ""]
+    recomkz=["-шорттар \n-футболка \n-ашық_туфли\n",
+         "-шалбар \n-футболка \n-күзгі_куртка \n-жабық_туфли\n",
+         "-шалбар \n-футболка \n-күзгі_куртка \n-куртка \n-қалпақ \n-күзгі_аяқ \n-жылы_шұлық\n",
+         "-шалбар \n-футболка \n-қысқы_куртка \n-қалпақ \n-қысқы_аяқ\n",
+         "-жылы_шалбар \n-футболка \n-қысқы_куртка \n-куртка \n-термо_іш_киім \n-қалпақ \n-қысқы_аяқ \n-өте_жылы_шұлық \n-жылы_орамал\n",
+         "-жазғы_куртка\n",
+         "-қолшатыр/жаңбыр \n-су_өткізбейтін_аяқ_киім\n",
+         "-қалпақ/қолшатыр/панама \n-күн_көзілдірігі\n",
+         "-шарф\n",
+         "-күннен_қорғайтын_көзілдірік\n",
+         "-жылы_орамал\n",
+         ""]
+    recomeng=["-shorts \n-t-shirt \n-open_shoes\n",
+         "-pants \n-t-shirt \n-autumn_jacket \n-closed_shoes\n",
+         "-pants \n-t-shirt \n-autumn_jacket \n-jacket \n-hat \n-autumn_shoes \n-warm_socks\n",
+         "-pants \n-t-shirt \n-winter_jacket \n-hat \n-winter_shoes\n",
+         "-warm_pants \n-t-shirt \n-winter_jacket \n-jacket \n-thermal_underwear \n-hat \n-winter_shoes \n-very_warm_socks \n-warm_scarf\n",
+         "-summer_jacket\n",
+         "-umbrella/raincoat \n-waterproof_shoes\n",
+         "-cap/umbrella/panama \n-sunglasses\n",
+         "-scarf\n",
+         "-sunglasses_glasses\n",
+         "-warm_scarf\n", 
+         ""]
+    if inflanga=="RU":
+        inflangb=recomru
+    elif inflanga=="KZ":
+        inflangb=recomkz
+    elif inflanga=="ENG":
+        inflangb=recomeng
+    return inflangb
+
+def decor(decora):
+    decorb=[]
+    infru=["температура: ", 
+       "°C", 
+       "влажность: ", 
+       "%", 
+       "ветер: ", 
+       " м/с", 
+       "ощущается: ", 
+       "°C", 
+       "давление: ", 
+       " мм.рт.ст", 
+       "    РЕКОМЕНДАЦИИ\nнаденьте:\n",
+       "облачность: "]
+    infeng=["temperature: ",
+       "°C",
+       "humidity: ",
+       "%",
+       "wind: ",
+       "m/s",
+       "feels: ",
+       "°C",
+       "pressure: ",
+       " mmHg",
+       " RECOMMENDATIONS\nput on:\n",
+        "clouds: "]
+    infkz=["температура: ",
+       "°C",
+       "ылғалдылық: ",
+       "%",
+       "жел: ",
+       " м/с",
+       "сезінді: ",
+       "°C",
+       "қысым: ",
+       " мм.рт.бағ",
+       " ҰСЫНЫСТАР\nкиіңіз:\n",
+       "бұлттылық: "]
+    if decora=="RU":
+        decorb=infru
+    elif decora=="KZ":
+        decorb=infkz
+    elif decora=="ENG":
+        decorb=infeng
+    return decorb
+
+def winf(city):
+    api="bebace4f671df38b18b2de3f3918b83d"
+    winfa=requests.get(
+        f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api}&units=metric"
+        )
+    l=winfa.json()
+    cmn=[]
+    cmn.append(str(l["main"]["temp"]))
+    cmn.append(str(l["main"]["humidity"]))
+    cmn.append(str(l["wind"]["speed"]))
+    cmn.append(str(l["main"]["feels_like"]))
+    cmn.append(str(l["clouds"]["all"]))
+    cmn.append(str(int(l["main"]["pressure"]/1.33)))
+    return cmn
+
+def text(citytext):
+    m=requests.get(
+        f"https://api.openweathermap.org/data/2.5/weather?q={citytext}&appid=bebace4f671df38b18b2de3f3918b83d&units=metric"
+        )
+    m=m.json()
+    text=[]
+    if m["main"]["feels_like"]>=22:
+        text.append(0)
+        if m["wind"]["speed"]>2:
+            text.append(5)
+            if m["weather"][0]["main"]=="Rain":
+                text.append(6)
+                if m["clouds"]["all"]<30:
+                    text.append(7)
+    if 16<=m["main"]["feels_like"]<22:
+        text.append(0)
+        if m["wind"]["speed"]>2:
+            text.append(5)
+            if m["weather"][0]["main"]=="Rain":
+                text.append(6)
+                if m["clouds"]["all"]<30:
+                    text.append(7)
+    if 8<=m["main"]["feels_like"]<16:
+        text.append(1)
+        if m["wind"]["speed"]>2:
+            text.append(8)
+            if m["weather"][0]["main"]=="Rain":
+                text.append(6)
+                if m["clouds"]["all"]<30:
+                    text.append(7)
+    if 0<=m["main"]["feels_like"]<8:
+        text.append(2)
+        if m["wind"]["speed"]>2:
+            text.append(8)
+            if m["weather"][0]["main"]=="Rain":
+                text.append(6)
+                if m["clouds"]["all"]<30:
+                    text.append(9)
+    if -15<=m["main"]["feels_like"]<0:
+        text.append(3)
+        if m["wind"]["speed"]>0:
+            text.append(10)
+    if m["main"]["feels_like"]<-15:
+        text.append(4)
+    text.append(11)
+    text.append(11)
+    text.append(11)
+    text.append(11)
+    return text
+
+Config.set('graphics', 'width', '400')
+Config.set('graphics', 'height', '750')
+
+class WeatherCheckApp(App):
+    def build(self):
+        self.sm=ScreenManager()
+        screen1=Screen(name="set")
+        self.a="RU"
+
+        self.b=TextInput(font_size=40, multiline=False, size_hint=(0.6, 1))
+        zl = GridLayout(size_hint=(1, 0.2), pos=(0, 350), cols=1)
+        sl = GridLayout(size_hint=(1, 0.8), cols=2)
+        sl.add_widget(Button(size_hint=(1, 1),text=self.a, on_press=self.btn))
+        sl.add_widget(Button(size_hint=(1, 1),text="->", on_press=self.btn2))
+        zl.add_widget(self.b)
+        zl.add_widget(sl)
+        screen1.add_widget(zl)
+
+        self.sm.add_widget(screen1)
+        self.sm.current="set"
+        return self.sm
+
+    def btn(self, instance):
+        self.a=lang(instance.text)
+        instance.text=self.a
+    def btn2(self, instance):
+        screen2=Screen(name="main")
+
+        ct=self.b.text
+        self.c=text(ct)
+        self.cmn=winf(ct)
+        self.inf=inflang(self.a)
+        self.dec=decor(self.a)
+        
+        bl = GridLayout(size_hint=(1, 0.3), pos=(0, 450), cols=2, spacing=3)
+        bl.add_widget(Button(text=(self.dec[0]+self.cmn[0]+self.dec[1])))
+        bl.add_widget(Button(text=(self.dec[2]+self.cmn[1]+self.dec[3])))
+        bl.add_widget(Button(text=(self.dec[4]+self.cmn[2]+self.dec[5])))
+        bl.add_widget(Button(text=(self.dec[6]+self.cmn[3]+self.dec[7])))
+        bl.add_widget(Button(text=(self.dec[11]+self.cmn[4]+self.dec[3])))
+        bl.add_widget(Button(text=(self.dec[8]+self.cmn[5]+self.dec[9])))
+        gl = GridLayout(size_hint=(1, 0.6), pos=(0, 0), cols=1, padding=[30])
+        gl.add_widget(Button(text=(self.dec[10]+self.inf[self.c[0]]+self.inf[self.c[1]]+self.inf[self.c[2]]+self.inf[self.c[3]]), font_size=20))
+        al = GridLayout(pos=(0, 0), cols=1, padding=[15])
+        al.add_widget(bl)
+        al.add_widget(gl)
+        screen2.add_widget(al)
+        
+        self.sm.add_widget(screen2)
+        self.sm.current="main"
+
+if __name__ == '__main__':
+    WeatherCheckApp().run()
